@@ -10,18 +10,29 @@ router = APIRouter()
 
 
 client = MongoClient("mongodb://localhost:27017")  # Ensure MongoDB is running
-db = client["test"]                            # Database name
-collection = db["Project-2"]      
+db = client["news"]                            # Database name
+collection = db["articles"]      
 
 
 
 # Define your RSS sources
 RSS_FEEDS = {
-    "The Hindu": "https://www.thehindu.com/news/national/feeder/default.rss",
-    "ANI": "https://www.aninews.in/rss/national-news.xml",
-    "NDTV": "http://feeds.feedburner.com/ndtvnews-top-stories",
-    "Indian Express": "https://indianexpress.com/section/india/feed/",
-    "Hindustan Times": "https://www.hindustantimes.com/rss/topnews/rssfeed.xml"
+   
+    # "ANI": "https://www.aninews.in/rss/national-news.xml",
+    # "NDTV": "http://feeds.feedburner.com/ndtvnews-top-stories",
+    # "Indian Express": "https://indianexpress.com/section/india/feed/",
+    # "Hindustan Times": "https://www.hindustantimes.com/rss/topnews/rssfeed.xml",
+    #  "The Hindu": "https://www.thehindu.com/news/national/feeder/default.rss"
+
+    "India Today": "https://www.indiatoday.in/rss/home",
+    "News18": "https://www.news18.com/rss/world.xml",
+    "DNA India": "https://www.dnaindia.com/feeds/india.xml",
+    "Firstpost": "https://www.firstpost.com/rss/india.xml",
+    "Business Standard": "https://www.business-standard.com/rss/home_page_top_stories.rss",
+    "Outlook India": "https://www.outlookindia.com/rss/main/magazine",
+    "Free Press Journal": "https://www.freepressjournal.in/stories.rss",
+    "Deccan Chronicle": "https://www.deccanchronicle.com/rss_feed/",
+    "Moneycontrol": "http://www.moneycontrol.com/rss/latestnews.xml"
 }
 
 # Function to strip HTML tags from RSS summary
@@ -61,7 +72,7 @@ def get_news(n:int):
             
             count=count-1
     
-    json_path = "D:/sem_5/p2/app/article.json"
+    json_path = "D:\\D\\Projefct-II\\app\\article.json"
 
     # Step 1: Load existing articles if file exists
     if os.path.exists(json_path):
@@ -83,9 +94,9 @@ def get_news(n:int):
     print("File saved at:", os.path.abspath(json_path))
 
 
-    # with open("article.json") as f:
-    #     data = json.load(f)
-    #     collection.insert_many(data)
+    with open(json_path) as f:
+        data = json.load(f)
+        collection.insert_many(data)
     collection.insert_many(mongo_articles) 
     
     
