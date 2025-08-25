@@ -128,18 +128,49 @@ function App() {
     return cat==='All' ? articles.length : articles.filter(a => a.category===cat).length
   }
 
+  const scrapeNews = async () => {
+  setLoading(true);
+  try {
+    const res = await axios.post('http://localhost:8000/scrape'); // your backend scraping endpoint
+    console.log('Scraped & stored', res.data);
+    fetchArticlesFromDB(); // Refresh after scraping
+  } catch (err) {
+    console.error(err);
+    setError('Failed to scrape news');
+  } finally {
+    setLoading(false);
+  }
+};
+
+
   return (
     <div className="app">
       {/* Header */}
       <header className="header">
-        <div className="header-content">
-          <div className="logo"><HiNewspaper size={32}/> <h1>NewsPulse</h1></div>
-          <div className="header-controls">
-            <button onClick={fetchArticlesFromDB} disabled={loading}><HiRefresh size={16} className={loading?'spinning':''}/> Refresh</button>
-            <button onClick={()=>setShowSidePanel(!showSidePanel)}><HiFilter size={16}/> Filters</button>
-          </div>
-        </div>
-      </header>
+  <div className="header-content">
+    <div className="logo">
+      <HiNewspaper size={32}/> 
+      <h1>NewsPulse</h1>
+    </div>
+    <div className="header-controls">
+      {/* Refresh Button */}
+      <button onClick={fetchArticlesFromDB} disabled={loading}>
+        <HiRefresh size={16} className={loading ? 'spinning' : ''} /> Refresh
+      </button>
+
+      {/* Scrape & Store Button */}
+      <button onClick={scrapeNews} disabled={loading}>
+        📰 Scrape & Store
+      </button>
+
+      {/* Filters Button */}
+      <button onClick={() => setShowSidePanel(!showSidePanel)}>
+        <HiFilter size={16}/> Filters
+      </button>
+    </div>
+  </div>
+</header>
+
 
       {/* Content */}
       <div className="content-wrapper">
