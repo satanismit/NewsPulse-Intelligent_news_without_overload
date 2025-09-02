@@ -7,7 +7,7 @@ function Navigation() {
       <div className="nav-container">
         <div className="nav-brand">
           <HiNewspaper size={28} />
-          <span>NewsPulse</span>
+          <span>PulseAI</span>
         </div>
         
         <div className="nav-links">

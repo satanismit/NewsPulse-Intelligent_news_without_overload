@@ -10,7 +10,7 @@ function Home() {
           <div className="hero-icon">
             <HiNewspaper size={80} />
           </div>
-          <h1 className="hero-title">Welcome to NewsPulse</h1>
+          <h1 className="hero-title">Welcome to PulseAI</h1>
           <p className="hero-subtitle">
             Your intelligent news aggregator powered by AI sentiment analysis and smart categorization
           </p>
@@ -30,7 +30,7 @@ function Home() {
       {/* Features Section */}
       <section className="features-section">
         <div className="container">
-          <h2 className="section-title">Why Choose NewsPulse?</h2>
+          <h2 className="section-title">Why Choose PulseAI?</h2>
           <div className="features-grid">
             <div className="feature-card">
               <div className="feature-icon">

@@ -1,4 +1,4 @@
-# NewsPulse - News Aggregator
+# PulseAI - News Aggregator
 
 A modern news aggregator that fetches the latest Indian news articles from multiple RSS feeds and displays them in a beautiful React UI.
 
@@ -177,7 +177,7 @@ This project is open source and available under the MIT License.
 
 ## Author
 
-**Smit Satani** - Developer of NewsPulse
+**Smit Satani** - Developer of PulseAI
 
 ---
 

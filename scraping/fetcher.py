@@ -28,7 +28,7 @@ except (ServerSelectionTimeoutError, ConnectionFailure) as e:
 # Define your RSS sources
 RSS_FEEDS = {
     "ANI": "https://www.aninews.in/rss/national-news.xml",
-    "NDTV": "http://feeds.feedburner.com/ndtvnews-top-stories",
+    # "NDTV": "http://feeds.feedburner.com/ndtvnews-top-stories",
     "Indian Express": "https://indianexpress.com/section/india/feed/",
     "Hindustan Times": "https://www.hindustantimes.com/rss/topnews/rssfeed.xml",
     "The Hindu": "https://www.thehindu.com/news/national/feeder/default.rss",

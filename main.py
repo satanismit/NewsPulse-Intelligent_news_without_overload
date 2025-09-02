@@ -12,7 +12,7 @@ from dotenv import load_dotenv
 load_dotenv()
 genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
 
-app = FastAPI(title="NewsPulse")
+app = FastAPI(title="PulseAI")
 
 # Add CORS middleware
 app.add_middleware(
