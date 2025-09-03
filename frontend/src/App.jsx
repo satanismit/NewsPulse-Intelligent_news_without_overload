@@ -3,6 +3,7 @@ import Navigation from './components/Navigation'
 import Home from './components/Home'
 import Articles from './components/Articles'
 import Chatbot from './components/Chatbot'
+import Notifications from './components/Notifications'
 import './App.css'
 
 function App() {
@@ -15,6 +16,7 @@ function App() {
             <Route path="/" element={<Home />} />
             <Route path="/articles" element={<Articles />} />
             <Route path="/chatbot" element={<Chatbot />} />
+            <Route path="/notifications" element={<Notifications />} />
           </Routes>
         </main>
       </div>

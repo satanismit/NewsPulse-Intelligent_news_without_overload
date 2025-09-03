@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom'
-import { HiNewspaper, HiHome, HiGlobeAlt, HiChat } from 'react-icons/hi'
+import { HiNewspaper, HiHome, HiGlobeAlt, HiChat, HiBell } from 'react-icons/hi'
 
 function Navigation() {
   return (
@@ -34,6 +34,14 @@ function Navigation() {
           >
             <HiChat size={20} />
             <span>AI Chat</span>
+          </NavLink>
+          
+          <NavLink 
+            to="/notifications" 
+            className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
+          >
+            <HiBell size={20} />
+            <span>Notifications</span>
           </NavLink>
         </div>
       </div>

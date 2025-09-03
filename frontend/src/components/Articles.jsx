@@ -146,20 +146,22 @@ function Articles() {
       {/* Header Controls */}
       <div className="articles-header">
         <div className="header-controls">
-          {/* Refresh Button */}
-          <button onClick={fetchArticlesFromDB} disabled={loading} className="control-btn">
-            <HiRefresh size={16} className={loading ? 'spinning' : ''} /> Refresh
-          </button>
-
-          {/* Scrape & Store Button */}
-          <button onClick={scrapeNews} disabled={loading} className="control-btn primary">
-            📰 Scrape & Store
-          </button>
-
-          {/* Filters Button */}
-          <button onClick={() => setShowSidePanel(!showSidePanel)} className="control-btn">
-            <HiFilter size={16}/> Filters
-          </button>
+          {/* Left side - Filters Button */}
+          <div className="left-controls">
+            <button onClick={() => setShowSidePanel(!showSidePanel)} className="control-btn">
+              <HiFilter size={16}/> Filters
+            </button>
+          </div>
+          
+          {/* Right side - Action Buttons */}
+          <div className="right-controls">
+            <button onClick={fetchArticlesFromDB} disabled={loading} className="control-btn">
+              <HiRefresh size={16} className={loading ? 'spinning' : ''} /> Refresh
+            </button>
+            <button onClick={scrapeNews} disabled={loading} className="control-btn primary">
+              📰 Scrape & Store
+            </button>
+          </div>
         </div>
       </div>
 
