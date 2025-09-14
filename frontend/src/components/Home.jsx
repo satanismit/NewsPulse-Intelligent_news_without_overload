@@ -4,8 +4,10 @@ import { Link } from 'react-router-dom'
 function Home() {
   return (
     <div className="home-page">
-      {/* Hero Section */}
-      <section className="hero-section">
+      {/* Main Content */}
+      <div className="home-content">
+        {/* Hero Section */}
+        <section className="hero-section">
         <div className="hero-content">
           <div className="hero-icon">
             <HiNewspaper size={80} />
@@ -116,6 +118,7 @@ function Home() {
           </div>
         </div>
       </section>
+      </div>
     </div>
   )
 }

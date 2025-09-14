@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import axios from 'axios'
-import { HiPaperAirplane, HiUser, HiSparkles, HiRefresh, HiX } from 'react-icons/hi'
+import { HiPaperAirplane, HiUser, HiSparkles, HiRefresh } from 'react-icons/hi'
 
 // Formatted Message Component
 const FormattedMessage = ({ sections }) => {
@@ -51,36 +51,6 @@ const FormattedMessage = ({ sections }) => {
   )
 }
 
-// Response Display Component
-const ResponseDisplay = ({ selectedMessage, onClose }) => {
-  if (!selectedMessage) return null
-
-  return (
-    <div className="response-display">
-      <div className="response-header">
-        <h3>Response Details</h3>
-        <button onClick={onClose} className="close-btn">
-          <HiX size={20} />
-        </button>
-      </div>
-      <div className="response-content">
-        <div className="response-meta">
-          <span className="response-time">
-            {selectedMessage.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-          </span>
-          <span className="response-type">AI Response</span>
-        </div>
-        <div className="response-text">
-          {selectedMessage.formatted && selectedMessage.sections ? (
-            <FormattedMessage sections={selectedMessage.sections} />
-          ) : (
-            <div className="plain-text">{selectedMessage.content}</div>
-          )}
-        </div>
-      </div>
-    </div>
-  )
-}
 
 function Chatbot() {
   const [messages, setMessages] = useState([
@@ -94,7 +64,6 @@ function Chatbot() {
   const [inputMessage, setInputMessage] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState(null)
-  const [selectedMessage, setSelectedMessage] = useState(null)
   const messagesEndRef = useRef(null)
 
   const scrollToBottom = () => {
@@ -135,8 +104,6 @@ function Chatbot() {
       }
 
       setMessages(prev => [...prev, botMessage])
-      // Auto-select the latest bot response
-      setSelectedMessage(botMessage)
     } catch (err) {
       console.error('Chat error:', err)
       setError('Failed to get response. Please try again.')
@@ -172,13 +139,6 @@ function Chatbot() {
       }
     ])
     setError(null)
-    setSelectedMessage(null)
-  }
-
-  const handleMessageClick = (message) => {
-    if (message.type === 'bot') {
-      setSelectedMessage(message)
-    }
   }
 
   const suggestedQuestions = [
@@ -199,46 +159,41 @@ function Chatbot() {
         <div className="header-content">
           <div className="header-left">
             <HiSparkles size={24} className="sparkle-icon" />
-            <h1>AI News Assistant</h1>
+            <h1>AI Chat Assistant</h1>
           </div>
-          <button onClick={clearChat} className="clear-chat-btn">
-            <HiRefresh size={16} />
-            Clear Chat
-          </button>
         </div>
       </div>
 
-      {/* Main Chat Layout */}
+      {/* Main Chat Interface */}
       <div className="chat-layout">
-        {/* Left Side - Chat Interface */}
-        <div className="chat-interface">
+        <div className="chat-section">
+          <div className="chat-header">
+            <h3>AI Chat</h3>
+            <button onClick={clearChat} className="clear-chat-btn">
+              <HiRefresh size={16} />
+            </button>
+          </div>
+
           {/* Messages */}
           <div className="messages-container">
             {messages.map((message) => (
               <div 
                 key={message.id} 
-                className={`message ${message.type} ${message.isError ? 'error' : ''} ${selectedMessage?.id === message.id ? 'selected' : ''}`}
-                onClick={() => handleMessageClick(message)}
+                className={`message ${message.type} ${message.isError ? 'error' : ''}`}
               >
                 <div className="message-avatar">
                   {message.type === 'user' ? (
-                    <HiUser size={20} />
+                    <HiUser size={16} />
                   ) : (
-                    <HiSparkles size={20} />
+                    <HiSparkles size={16} />
                   )}
                 </div>
                 <div className="message-content">
                   <div className="message-text">
                     {message.formatted && message.sections ? (
-                      <div className="message-preview">
-                        {message.sections[0]?.content?.[0] || message.content.substring(0, 100)}
-                        {message.content.length > 100 && '...'}
-                      </div>
+                      <FormattedMessage sections={message.sections} />
                     ) : (
-                      <div className="message-preview">
-                        {message.content.substring(0, 100)}
-                        {message.content.length > 100 && '...'}
-                      </div>
+                      <div className="plain-text">{message.content}</div>
                     )}
                   </div>
                   <div className="message-timestamp">
@@ -251,7 +206,7 @@ function Chatbot() {
             {isLoading && (
               <div className="message bot">
                 <div className="message-avatar">
-                  <HiSparkles size={20} />
+                  <HiSparkles size={16} />
                 </div>
                 <div className="message-content">
                   <div className="typing-indicator">
@@ -269,9 +224,9 @@ function Chatbot() {
           {/* Suggested Questions */}
           {messages.length === 1 && (
             <div className="suggested-questions">
-              <h3>Try asking me about:</h3>
+              <h4>Try asking:</h4>
               <div className="question-chips">
-                {suggestedQuestions.map((question, index) => (
+                {suggestedQuestions.slice(0, 4).map((question, index) => (
                   <button
                     key={index}
                     onClick={() => setInputMessage(question)}
@@ -291,9 +246,9 @@ function Chatbot() {
                 value={inputMessage}
                 onChange={(e) => setInputMessage(e.target.value)}
                 onKeyPress={handleKeyPress}
-                placeholder="Ask me anything about news, current events, or get analysis..."
+                placeholder="Ask me anything about news..."
                 disabled={isLoading}
-                rows={1}
+                rows={2}
                 className="message-input"
               />
               <button
@@ -301,55 +256,13 @@ function Chatbot() {
                 disabled={!inputMessage.trim() || isLoading}
                 className="send-button"
               >
-                <HiPaperAirplane size={20} />
+                <HiPaperAirplane size={18} />
               </button>
             </div>
             {error && <div className="error-message">{error}</div>}
           </div>
         </div>
 
-        {/* Right Side - Response Display */}
-        <div className="response-panel">
-          {selectedMessage ? (
-            <ResponseDisplay 
-              selectedMessage={selectedMessage} 
-              onClose={() => setSelectedMessage(null)} 
-            />
-          ) : (
-            <div className="response-placeholder">
-              <div className="placeholder-content">
-                <HiSparkles size={48} className="placeholder-icon" />
-                <h3>Select a Response</h3>
-                <p>Click on any AI response in the chat to view it in detail here.</p>
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Features Info */}
-      <div className="features-info">
-        <div className="container">
-          <h3>What I can help you with:</h3>
-          <div className="features-grid">
-            <div className="feature">
-              <HiSparkles size={20} />
-              <span>News Analysis & Summaries</span>
-            </div>
-            <div className="feature">
-              <HiSparkles size={20} />
-              <span>Current Events Discussion</span>
-            </div>
-            <div className="feature">
-              <HiSparkles size={20} />
-              <span>Trend Analysis</span>
-            </div>
-            <div className="feature">
-              <HiSparkles size={20} />
-              <span>Context & Background</span>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
   )

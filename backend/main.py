@@ -67,6 +67,7 @@ class WhatsAppRequest(BaseModel):
     whatsapp: str
     articles: List[Dict[str, Any]]
 
+
 @app.post("/chat")
 async def chat(request: ChatRequest):
     try:
@@ -342,6 +343,7 @@ async def send_whatsapp(request: WhatsAppRequest):
             
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to send WhatsApp message: {str(e)}")
+
 
 # Include other routers
 app.include_router(router)
