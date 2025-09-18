@@ -1,13 +1,27 @@
 :root {
+  /* Base typography */
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
     'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
     sans-serif;
   line-height: 1.5;
   font-weight: 400;
 
-  color-scheme: light;
-  color: #1e293b;
-  background-color: #f8fafc;
+  /* Dark theme variables (default) */
+  color-scheme: dark;
+  --bg: #0b1020; /* page background */
+  --surface: #0f1724; /* cards, surfaces */
+  --muted-surface: #111827;
+  --text: #e6eef8; /* main text */
+  --muted: #9aa6bd; /* secondary text */
+  --primary: #7c9cff; /* primary accent */
+  --primary-600: #5a7dff;
+  --accent: #7c5cff; /* accent/purple */
+  --success: #10b981;
+  --danger: #ef4444;
+  --card-border: rgba(255,255,255,0.03);
+  --glass: rgba(255,255,255,0.03);
+  --link: #93b4ff;
+  --shadow: 0 6px 18px rgba(2,6,23,0.6);
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -28,6 +42,8 @@ body {
   place-items: center;
   min-width: 320px;
   min-height: 100vh;
+  background-color: var(--bg);
+  color: var(--text);
 }
 
 #root {
@@ -38,12 +54,12 @@ body {
 
 a {
   font-weight: 500;
-  color: #667eea;
+  color: var(--link);
   text-decoration: inherit;
 }
 
 a:hover {
-  color: #5a67d8;
+  color: var(--primary-600);
 }
 
 button {
@@ -53,14 +69,15 @@ button {
   font-size: 1em;
   font-weight: 500;
   font-family: inherit;
-  background-color: #1a1a1a;
-  color: white;
+  background-color: var(--muted-surface);
+  color: var(--text);
   cursor: pointer;
-  transition: border-color 0.25s;
+  transition: border-color 0.18s, transform 0.15s;
 }
 
 button:hover {
-  border-color: #646cff;
+  border-color: rgba(255,255,255,0.06);
+  transform: translateY(-2px);
 }
 
 button:focus,
@@ -69,14 +86,19 @@ button:focus-visible {
 }
 
 @media (prefers-color-scheme: light) {
+  /* Light overrides when user's system prefers light */
   :root {
-    color: #213547;
-    background-color: #ffffff;
-  }
-  a:hover {
-    color: #747bff;
-  }
-  button {
-    background-color: #f9f9f9;
+    color-scheme: light;
+    --bg: #ffffff;
+    --surface: #f8fafc;
+    --muted-surface: #ffffff;
+    --text: #0f1724;
+    --muted: #475569;
+    --primary: #667eea;
+    --primary-600: #5a67d8;
+    --accent: #764ba2;
+    --card-border: rgba(15, 23, 42, 0.03);
+    --link: #667eea;
+    --shadow: 0 6px 18px rgba(2,6,23,0.06);
   }
 }

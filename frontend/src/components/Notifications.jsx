@@ -4,6 +4,8 @@ import {
   HiMail, HiDeviceMobile, HiCheck, HiX, HiInformationCircle,
   HiRefresh, HiPaperAirplane, HiSelector
 } from 'react-icons/hi'
+import LoadingSpinner from './LoadingSpinner'
+import NeonCheckbox from './NeonCheckbox'
 
 function Notifications() {
   const [articles, setArticles] = useState([])
@@ -18,6 +20,26 @@ function Notifications() {
   const [selectionMode, setSelectionMode] = useState('manual') // 'manual' or 'auto'
   const [topCount, setTopCount] = useState(5)
 
+  // Format date consistently with Articles page
+  const formatDate = (dateString) => {
+    if (!dateString || dateString === 'Unknown') return 'Recent'
+    try {
+      return new Date(dateString).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: '2-digit'
+      })
+    } catch {
+      return 'Recent'
+    }
+  }
+
+  // Add sort key for consistent sorting
+  const addSortKey = (article) => ({
+    ...article,
+    _sortKey: new Date(article.published === 'Unknown' ? article.fetched_at : article.published).getTime()
+  })
+
   // Fetch articles on component mount
   useEffect(() => {
     fetchArticles()
@@ -27,7 +49,12 @@ function Notifications() {
     setLoading(true)
     try {
       const res = await axios.get('http://localhost:8000/articles')
-      setArticles(res.data.articles || [])
+      // Add sort key and sort by published date (newest first)
+      const sortedArticles = (res.data.articles || [])
+        .map(addSortKey)
+        .sort((a, b) => b._sortKey - a._sortKey)
+      
+      setArticles(sortedArticles)
     } catch (err) {
       console.error('Failed to fetch articles:', err)
       setMessage('Failed to fetch articles')
@@ -56,7 +83,8 @@ function Notifications() {
   }
 
   const selectTopArticles = (count) => {
-    const topIndices = articles.slice(0, Math.min(count, articles.length)).map((_, index) => index)
+    // Since articles are already sorted by date, we can just take the first N
+    const topIndices = Array.from({ length: Math.min(count, articles.length) }, (_, i) => i)
     setSelectedArticles(topIndices)
   }
 
@@ -118,14 +146,6 @@ function Notifications() {
     }
   }
 
-  const formatDate = (dateString) => {
-    if (!dateString || dateString === 'Unknown') return 'Recent'
-    try {
-      return new Date(dateString).toLocaleDateString()
-    } catch {
-      return 'Recent'
-    }
-  }
 
   return (
     <div className="notifications-page">
@@ -293,7 +313,7 @@ function Notifications() {
             >
               {sending ? (
                 <>
-                  <div className="spinner"></div>
+                  <LoadingSpinner size="small" />
                   Sending...
                 </>
               ) : (
@@ -318,7 +338,12 @@ function Notifications() {
         <div className="articles-section">
           <div className="articles-header-section">
             <h3>Available Articles ({articles.length})</h3>
-            {loading && <span className="loading-text">Loading articles...</span>}
+            {loading && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <LoadingSpinner size="small" />
+                <span className="loading-text">Loading articles...</span>
+              </div>
+            )}
           </div>
 
           <div className="articles-list">
@@ -335,11 +360,13 @@ function Notifications() {
                   onClick={() => handleArticleSelect(index)}
                 >
                   <div className="article-checkbox">
-                    <input
-                      type="checkbox"
+                    <NeonCheckbox
                       checked={selectedArticles.includes(index)}
-                      onChange={() => handleArticleSelect(index)}
-                      onClick={(e) => e.stopPropagation()}
+                      onChange={(e) => {
+                        e.stopPropagation();
+                        handleArticleSelect(index);
+                      }}
+                      aria-label={article.title}
                     />
                   </div>
                   <div className="article-content">

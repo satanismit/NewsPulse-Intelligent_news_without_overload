@@ -52,9 +52,11 @@ def get_all_articles():
 def scrape_and_store(n: int = 20):
     result = fetcher.get_news(n)
     return {
-        "message": f"Scraped {result['total']} new articles, total in system: {result['total_in_system']}",
-        "new_articles": result['articles']
+        "message": result.get("message", f"Scraped {result.get('total', 0)} articles"),
+        "articles": result.get("articles", []),
+        "total": result.get("total", 0)
     }
+
 # Request body models
 class ChatRequest(BaseModel):
     query: str
@@ -73,29 +75,52 @@ async def chat(request: ChatRequest):
     try:
         model = genai.GenerativeModel("gemini-2.5-flash")
         
-        # Enhanced prompt to get better formatted responses
+        # Enhanced prompt for concise, clear responses
         enhanced_prompt = f"""
-        Please provide a well-formatted response to the following query. 
-        Use proper formatting with:
-        - Headers (## for main sections, ### for subsections)
-        - Bullet points for lists
-        - Bold text for important points
-        - Clear sections and paragraphs
-        - Numbered lists when appropriate
-        - Summary sections when relevant
+        Please provide a clear and concise response to the following query.
+        Follow these guidelines:
+        - Be direct and to the point
+        - Use simple, plain text only (no markdown formatting)
+        - Keep responses under 5 sentences when possible
+        - Use simple bullet points with dashes (-)
+        - Do not use bold, italic, or any special formatting
+        - Skip unnecessary introductions
+        - Focus on the most relevant information
+        - Write in plain text without asterisks, underscores, or special characters
         
         Query: {request.query}
         
-        Format your response with proper markdown-style formatting that can be easily parsed and displayed in a chat interface.
+        Respond in plain text that's easy to read.
         """
         
         response = model.generate_content(enhanced_prompt)
         
+        # Clean up the response text - remove all markdown formatting
+        clean_text = response.text.strip()
+        
+        # Remove markdown headers
+        clean_text = clean_text.replace('## ', '').replace('### ', '').replace('# ', '')
+        
+        # Remove bold formatting
+        clean_text = clean_text.replace('**', '')
+        
+        # Remove italic formatting
+        clean_text = clean_text.replace('*', '')
+        
+        # Remove other common markdown elements
+        clean_text = clean_text.replace('_', '')
+        clean_text = clean_text.replace('`', '')
+        
+        # Clean up extra whitespace
+        import re
+        clean_text = re.sub(r'\n\s*\n', '\n\n', clean_text)  # Multiple newlines to double
+        clean_text = re.sub(r' +', ' ', clean_text)  # Multiple spaces to single
+        
         # Parse and structure the response
         formatted_response = {
-            "text": response.text,
+            "text": clean_text,
             "formatted": True,
-            "sections": parse_response_sections(response.text)
+            "sections": parse_response_sections(clean_text)
         }
         
         return formatted_response
@@ -112,37 +137,19 @@ def parse_response_sections(text):
         line = line.strip()
         if not line:
             if current_section["content"]:
-                sections.append(current_section)
+                # Only add paragraph if it has content
+                if any(part.strip() for part in current_section["content"]):
+                    sections.append(current_section)
                 current_section = {"type": "paragraph", "content": []}
             continue
             
-        # Check for headers
-        if line.startswith('## '):
-            if current_section["content"]:
-                sections.append(current_section)
-            current_section = {"type": "header", "level": 2, "content": [line[3:]]}
-            sections.append(current_section)
-            current_section = {"type": "paragraph", "content": []}
-        elif line.startswith('### '):
-            if current_section["content"]:
-                sections.append(current_section)
-            current_section = {"type": "header", "level": 3, "content": [line[4:]]}
-            sections.append(current_section)
-            current_section = {"type": "paragraph", "content": []}
-        # Check for bullet points
-        elif line.startswith('- ') or line.startswith('• ') or line.startswith('* '):
+        # Check for bullet points (simplified for cleaner output)
+        if line.startswith(('- ', '• ', '* ')):
             if current_section["type"] != "bullet_list":
-                if current_section["content"]:
+                if current_section["content"] and any(part.strip() for part in current_section["content"]):
                     sections.append(current_section)
                 current_section = {"type": "bullet_list", "content": []}
             current_section["content"].append(line[2:])
-        # Check for numbered lists
-        elif line[0].isdigit() and '. ' in line[:5]:
-            if current_section["type"] != "numbered_list":
-                if current_section["content"]:
-                    sections.append(current_section)
-                current_section = {"type": "numbered_list", "content": []}
-            current_section["content"].append(line)
         else:
             # Regular paragraph text
             if current_section["type"] != "paragraph":
@@ -348,3 +355,8 @@ async def send_whatsapp(request: WhatsAppRequest):
 # Include other routers
 app.include_router(router)
 app.include_router(router2)
+
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run("main:app",host="127.0.0.1", port=8000, reload=True)

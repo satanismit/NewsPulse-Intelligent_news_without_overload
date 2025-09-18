@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import axios from 'axios'
 import { HiPaperAirplane, HiUser, HiSparkles, HiRefresh } from 'react-icons/hi'
+import LoadingSpinner from './LoadingSpinner'
 
 // Formatted Message Component
 const FormattedMessage = ({ sections }) => {
@@ -210,9 +211,7 @@ function Chatbot() {
                 </div>
                 <div className="message-content">
                   <div className="typing-indicator">
-                    <span></span>
-                    <span></span>
-                    <span></span>
+                    <LoadingSpinner size="small" />
                   </div>
                 </div>
               </div>

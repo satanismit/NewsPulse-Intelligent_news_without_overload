@@ -3,8 +3,10 @@
 from fastapi import HTTPException
 import feedparser
 from bs4 import BeautifulSoup
-import json, os
-from pymongo import MongoClient
+import json, os, random
+from typing import List, Dict, Any
+from datetime import datetime
+from pymongo import MongoClient, UpdateOne
 from pymongo.errors import ServerSelectionTimeoutError, ConnectionFailure
 from fastapi.encoders import jsonable_encoder
 from bson import ObjectId
@@ -28,7 +30,7 @@ except (ServerSelectionTimeoutError, ConnectionFailure) as e:
 # Define your RSS sources
 RSS_FEEDS = {
     "ANI": "https://www.aninews.in/rss/national-news.xml",
-    # "NDTV": "http://feeds.feedburner.com/ndtvnews-top-stories",
+    "NDTV": "http://feeds.feedburner.com/ndtvnews-top-stories",
     "Indian Express": "https://indianexpress.com/section/india/feed/",
     "Hindustan Times": "https://www.hindustantimes.com/rss/topnews/rssfeed.xml",
     "The Hindu": "https://www.thehindu.com/news/national/feeder/default.rss",
@@ -50,72 +52,95 @@ def clean_summary(summary_html):
 
 def get_news(n: int):
     if n <= 0:
-        raise HTTPException(status_code=401, detail="Bad Request")
+        return {"total": 0, "articles": [], "message": "No articles requested"}
+    
+    # Get list of available RSS feeds and shuffle them
+    rss_sources = list(RSS_FEEDS.items())
+    random.shuffle(rss_sources)
     
     all_articles = []
-    count = n
-
-    # Fetch RSS feeds
-    for source_name, url in RSS_FEEDS.items():
-        feed = feedparser.parse(url)
-        if count == 0:
-            break
-        
-        for entry in feed.entries[:n]:
-            article_data = {
-                "source": source_name,
-                "title": entry.title,
-                "summary": clean_summary(entry.summary),
-                "link": entry.link,
-                "published": entry.get("published", "Unknown")
-            }
-            all_articles.append(article_data)
-            count -= 1
+    collected_articles = 0
+    processed_sources = set()
+    articles_per_source = max(1, n // min(5, len(rss_sources)))  # Distribute across at least 5 sources
     
-    # Load existing articles from JSON file
-    json_path = "article.json"
-    existing_articles = []
+    # Continue until we've collected enough articles or processed all sources
+    while collected_articles < n and len(processed_sources) < len(rss_sources):
+        # Get next random source that hasn't been processed yet
+        for source_name, url in rss_sources:
+            if collected_articles >= n:
+                break
+                
+            if source_name in processed_sources:
+                continue
+                
+            try:
+                print(f"Fetching from {source_name}...")
+                feed = feedparser.parse(url)
+                source_articles = 0
+                
+                # Process entries from this feed
+                for entry in feed.entries:
+                    if collected_articles >= n or source_articles >= articles_per_source * 2:  # Allow some flexibility
+                        break
+                        
+                    article_data = {
+                        "source": source_name,
+                        "title": entry.title.strip(),
+                        "summary": clean_summary(entry.summary),
+                        "link": entry.link,
+                        "published": entry.get("published", "Unknown"),
+                        "fetched_at": datetime.utcnow().isoformat()
+                    }
+                    
+                    # Check for duplicates before adding
+                    if not any(a['title'].lower() == article_data['title'].lower() for a in all_articles):
+                        all_articles.append(article_data)
+                        collected_articles += 1
+                        source_articles += 1
+                
+                processed_sources.add(source_name)
+                print(f"  - Found {source_articles} new articles from {source_name}")
+                
+                # If we've processed enough sources to potentially get the requested articles, break early
+                if len(processed_sources) >= min(5, len(rss_sources)) and collected_articles >= n:
+                    break
+                    
+            except Exception as e:
+                print(f"Error fetching from {source_name}: {str(e)}")
+                processed_sources.add(source_name)
+                continue
     
-    if os.path.exists(json_path):
+    # Save to MongoDB if available
+    saved_count = 0
+    if mongodb_available and collection is not None and all_articles:
         try:
-            with open(json_path, "r", encoding="utf-8") as f:
-                existing_articles = json.load(f)
-        except (json.JSONDecodeError, FileNotFoundError):
-            existing_articles = []
-    
-    # Remove duplicates based on title
-    existing_titles = set(article.get('title', '') for article in existing_articles)
-    unique_new_articles = [article for article in all_articles if article.get('title', '') not in existing_titles]
-    
-    # Combine existing and new articles
-    combined_articles = existing_articles + unique_new_articles
-    
-    # Save all articles to JSON file
-    with open(json_path, "w", encoding="utf-8") as f:
-        json.dump(combined_articles, f, indent=4, ensure_ascii=False)
-
-    print("File saved at:", os.path.abspath(json_path))
-    print(f"Total articles: {len(combined_articles)} (Added {len(unique_new_articles)} new)")
-
-    # Save new articles to MongoDB if available
-    if mongodb_available and collection is not None:
-        try:
-            if unique_new_articles:
-                collection.insert_many(unique_new_articles)
-            print("✅ New data saved to MongoDB")
+            # Prepare bulk operations for upsert
+            operations = []
+            for article in all_articles:
+                operations.append(
+                    UpdateOne(
+                        {"title": article["title"], "source": article["source"]},
+                        {"$setOnInsert": article},
+                        upsert=True
+                    )
+                )
+            
+            if operations:
+                result = collection.bulk_write(operations, ordered=False)
+                saved_count = result.upserted_count + result.modified_count
+                print(f"✅ Saved {saved_count} articles to MongoDB")
+                
         except Exception as e:
             print(f"⚠️ Failed to save to MongoDB: {e}")
-    else:
-        print("ℹ️ Skipping MongoDB storage (not available)")
-
-    # Encode articles to handle ObjectId
+    
+    # Prepare response
     articles_for_return = jsonable_encoder(
-        unique_new_articles,
+        all_articles,
         custom_encoder={ObjectId: str}
     )
-
+    
     return {
-        "total": len(unique_new_articles),
+        "total": len(articles_for_return),
         "articles": articles_for_return,
-        "total_in_system": len(combined_articles)
+        "message": f"Fetched {len(articles_for_return)} articles from {len(processed_sources)} sources"
     }

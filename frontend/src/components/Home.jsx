@@ -1,9 +1,15 @@
 import { HiNewspaper, HiChat, HiGlobeAlt, HiClock } from 'react-icons/hi'
 import { Link } from 'react-router-dom'
+import { BackgroundPaths } from './BackgroundPaths'
+import { AnimatedCounter } from './AnimatedCounter'
+import DisplayCards from './DisplayCards'
 
 function Home() {
   return (
     <div className="home-page">
+      {/* Animated Background */}
+      <BackgroundPaths />
+      
       {/* Main Content */}
       <div className="home-content">
         {/* Hero Section */}
@@ -74,7 +80,7 @@ function Home() {
         <div className="container">
           <div className="stats-grid">
             <div className="stat-item">
-              <div className="stat-number">8+</div>
+              <AnimatedCounter target={8} duration={1.2} suffix="+" />
               <div className="stat-label">News Categories</div>
             </div>
             <div className="stat-item">
@@ -93,28 +99,12 @@ function Home() {
         </div>
       </section>
 
-      {/* Quick Start Section */}
+      {/* Display Cards Section */}
       <section className="quick-start-section">
         <div className="container">
           <h2 className="section-title">Get Started</h2>
-          <div className="quick-start-grid">
-            <Link to="/articles" className="quick-start-card">
-              <div className="card-icon">
-                <HiGlobeAlt size={24} />
-              </div>
-              <h3>Browse News</h3>
-              <p>Explore the latest articles with smart filtering and categorization</p>
-              <span className="card-arrow">→</span>
-            </Link>
-            
-            <Link to="/chatbot" className="quick-start-card">
-              <div className="card-icon">
-                <HiChat size={24} />
-              </div>
-              <h3>AI Assistant</h3>
-              <p>Chat with our AI-powered assistant for news insights and analysis</p>
-              <span className="card-arrow">→</span>
-            </Link>
+          <div className="display-cards-container">
+            <DisplayCards />
           </div>
         </div>
       </section>

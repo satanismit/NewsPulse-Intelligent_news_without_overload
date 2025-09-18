@@ -2,9 +2,11 @@ import { useState, useEffect } from 'react'
 import axios from 'axios'
 import { 
   HiClock, HiExternalLink, HiRefresh, HiInformationCircle,
-  HiFilter, HiX, HiEmojiHappy, HiEmojiSad, HiMinus
+  HiFilter, HiX, HiEmojiHappy, HiEmojiSad, HiMinus, HiOutlineNewspaper
 } from 'react-icons/hi'
 import { format, parseISO } from 'date-fns'
+import LoadingSpinner from './LoadingSpinner'
+import './Articles.css'
 
 // Helper: format dates safely
 const formatDate = (dateString) => {
@@ -71,6 +73,8 @@ function Articles() {
   const [selectedCategory, setSelectedCategory] = useState('All')
   const [selectedSentiment, setSelectedSentiment] = useState('All')
   const [showSidePanel, setShowSidePanel] = useState(false)
+  const [scrapeCount, setScrapeCount] = useState(20)
+  const [totalArticles, setTotalArticles] = useState(0)
 
   const categories = ['All','Politics','Technology','Business','Sports','Entertainment','Health','Education','International','Other']
   const sentiments = ['All','Positive','Negative','Neutral']
@@ -93,20 +97,32 @@ function Articles() {
     }
   }
 
-  // Fetch articles
+  // Fetch all articles from database
   const fetchArticlesFromDB = async () => {
     setLoading(true)
     setError(null)
     try {
       const res = await axios.get('http://localhost:8000/articles')
+      // Preserve the original order from the backend
       const fetched = res.data.articles.map(a => ({
         ...a,
         sentiment: analyzeSentiment(`${a.title || ''} ${a.summary || ''}`),
-        category: assignCategory(a)
+        category: assignCategory(a),
+        // Add a timestamp for client-side sorting if needed
+        _sortKey: new Date(a.published === 'Unknown' ? a.fetched_at : a.published).getTime()
       }))
+      
+      // Sort by the original order (using the _sortKey we just added)
+      fetched.sort((a, b) => b._sortKey - a._sortKey)
+      
       setArticles(fetched)
-    } catch(err){ console.error(err); setError('Failed to fetch articles') }
-    finally{ setLoading(false) }
+      setTotalArticles(res.data.total || 0)
+    } catch(err){ 
+      console.error(err); 
+      setError('Failed to fetch articles') 
+    } finally { 
+      setLoading(false) 
+    }
   }
 
   const fetchAbout = async () => {
@@ -114,7 +130,11 @@ function Articles() {
     catch(err){ console.error(err) }
   }
 
-  useEffect(() => { fetchAbout(); fetchArticlesFromDB() }, [])
+  useEffect(() => { 
+    fetchAbout();
+    // Initial fetch of all articles
+    fetchArticlesFromDB();
+  }, [])
 
   const getArticlesToDisplay = () => {
     return articles.filter(a => 
@@ -130,9 +150,10 @@ function Articles() {
   const scrapeNews = async () => {
     setLoading(true);
     try {
-      const res = await axios.post('http://localhost:8000/scrape');
+      const res = await axios.post(`http://localhost:8000/scrape?n=${scrapeCount}`);
       console.log('Scraped & stored', res.data);
-      fetchArticlesFromDB();
+      // Fetch all articles after scraping
+      await fetchArticlesFromDB();
     } catch (err) {
       console.error(err);
       setError('Failed to scrape news');
@@ -155,11 +176,33 @@ function Articles() {
           
           {/* Right side - Action Buttons */}
           <div className="right-controls">
-            <button onClick={fetchArticlesFromDB} disabled={loading} className="control-btn">
+            <div className="scrape-count-control">
+              <label htmlFor="scrape-count">Scrape: </label>
+              <input 
+                type="number"
+                id="scrape-count"
+                min="1"
+                max="100"
+                value={scrapeCount}
+                onChange={(e) => {
+                  const value = Math.max(1, parseInt(e.target.value) || 1);
+                  setScrapeCount(Math.min(value, 100)); // Limit to 100 articles max
+                }}
+                className="scrape-count-input"
+                disabled={loading}
+              />
+              <span className="count-label">articles</span>
+            </div>
+            <button 
+              onClick={() => fetchArticlesFromDB()} 
+              disabled={loading} 
+              className="control-btn" 
+              title="Refresh articles"
+            >
               <HiRefresh size={16} className={loading ? 'spinning' : ''} /> Refresh
             </button>
-            <button onClick={scrapeNews} disabled={loading} className="control-btn primary">
-              📰 Scrape & Store
+            <button onClick={scrapeNews} disabled={loading} className="control-btn primary" title={`Scrape ${scrapeCount} latest news articles`}>
+              <HiOutlineNewspaper size={16} /> Scrape {scrapeCount} Articles
             </button>
           </div>
         </div>
@@ -168,7 +211,7 @@ function Articles() {
       {/* Content */}
       <div className="content-wrapper">
         {showSidePanel && (
-          <aside className="side-panel">
+          <aside className={`side-panel ${showSidePanel ? 'show' : ''}`}>
             <div className="side-panel-header">
               <h3>Filters</h3>
               <button onClick={()=>setShowSidePanel(false)}><HiX size={20}/></button>
@@ -183,8 +226,8 @@ function Articles() {
                   onClick={() => setSelectedCategory(cat)} 
                   className={selectedCategory === cat ? 'active' : ''} 
                   style={{ 
-                    backgroundColor: selectedCategory === cat ? categoryColors[cat] : '#f3f4f6', 
-                    color: selectedCategory === cat ? '#fff' : '#000' 
+                    backgroundColor: selectedCategory === cat ? categoryColors[cat] : 'var(--muted-surface)',
+                    color: selectedCategory === cat ? '#fff' : 'var(--text)'
                   }}
                 >
                   {cat} ({getCategoryCount(cat)})
@@ -205,10 +248,27 @@ function Articles() {
         )}
 
         <main className={`main-content ${showSidePanel?'with-side-panel':''}`}>
-          {loading && <p>Loading articles...</p>}
-          {!loading && error && <p>{error}</p>}
-          {!loading && !error && getArticlesToDisplay().length===0 && <p>No articles found.</p>}
-          {!loading && getArticlesToDisplay().length>0 && (
+          {loading ? (
+            <div className="loading-container">
+              <LoadingSpinner size="medium" />
+              <p>Loading articles...</p>
+            </div>
+          ) : error ? (
+            <div className="error-message">
+              <p>{error}</p>
+              <button onClick={fetchArticlesFromDB} className="retry-btn">Retry</button>
+            </div>
+          ) : getArticlesToDisplay().length===0 ? (
+            <div className="no-articles">
+              <p>No articles found matching your filters.</p>
+              <button 
+                onClick={() => { setSelectedCategory('All'); setSelectedSentiment('All') }} 
+                className="clear-filters-btn"
+              >
+                Clear Filters
+              </button>
+            </div>
+          ) : (
             <div className="articles-grid">
               {getArticlesToDisplay().map((a,i)=>(
                 <article key={i} className="article-card">
