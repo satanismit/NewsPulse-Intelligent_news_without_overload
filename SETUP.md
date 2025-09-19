@@ -42,7 +42,7 @@ WHATSAPP_TOKEN=your_whatsapp_business_api_token
 WHATSAPP_PHONE_ID=your_whatsapp_phone_number_id
 
 # Optional: MongoDB Configuration
-MONGODB_URI=mongodb://localhost:27017/newspulse
+MONGODB_URI=mongodb+srv://23aiml062_db_user:Wv7GpOzvMuY3y1M2@articles.7hfshvh.mongodb.net/ArticlesDB?retryWrites=true&w=majority&appName=Articles/newspulse
 ```
 
 ### 3. Email Setup (Gmail)

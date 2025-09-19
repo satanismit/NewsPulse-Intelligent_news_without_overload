@@ -13,7 +13,7 @@ from bson import ObjectId
 
 # MongoDB connection with error handling
 try:
-    client = MongoClient("mongodb://localhost:27017", serverSelectionTimeoutMS=5000)
+    client = MongoClient("mongodb+srv://23aiml062_db_user:Wv7GpOzvMuY3y1M2@articles.7hfshvh.mongodb.net/ArticlesDB?retryWrites=true&w=majority&appName=Articles", serverSelectionTimeoutMS=5000)
     # Test the connection
     client.admin.command('ping')
     db = client["news"]
