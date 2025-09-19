@@ -102,7 +102,7 @@ function Articles() {
     setLoading(true)
     setError(null)
     try {
-      const res = await axios.get('http://localhost:8000/articles')
+      const res = await axios.get('https://pulseai-backend-3.onrender.com/articles')
       // Preserve the original order from the backend
       const fetched = res.data.articles.map(a => ({
         ...a,
@@ -126,7 +126,7 @@ function Articles() {
   }
 
   const fetchAbout = async () => {
-    try { const res = await axios.get('http://localhost:8000/About'); setAboutInfo(res.data) } 
+    try { const res = await axios.get('https://pulseai-backend-3.onrender.com/About'); setAboutInfo(res.data) } 
     catch(err){ console.error(err) }
   }
 
@@ -150,7 +150,7 @@ function Articles() {
   const scrapeNews = async () => {
     setLoading(true);
     try {
-      const res = await axios.post(`http://localhost:8000/scrape?n=${scrapeCount}`);
+      const res = await axios.post(`https://pulseai-backend-3.onrender.com/scrape?n=${scrapeCount}`);
       console.log('Scraped & stored', res.data);
       // Fetch all articles after scraping
       await fetchArticlesFromDB();

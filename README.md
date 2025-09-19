@@ -65,7 +65,7 @@ npm install
 uvicorn main:app --reload --host 0.0.0.0 --port 8000
 ```
 
-The FastAPI server will start at `http://localhost:8000`
+The FastAPI server will start at `https://pulseai-backend-3.onrender.com`
 
 ### 2. Start the Frontend
 
@@ -160,7 +160,7 @@ The React components and styles can be customized in:
 4. **Port Conflicts**: Make sure ports 8000 (backend) and 5173 (frontend) are available
 
 ### Debug Mode
-- Backend: FastAPI automatically provides interactive docs at `http://localhost:8000/docs`
+- Backend: FastAPI automatically provides interactive docs at `https://pulseai-backend-3.onrender.com/docs`
 - Frontend: Check browser console for any JavaScript errors
 
 ## Contributing

@@ -48,7 +48,7 @@ function Notifications() {
   const fetchArticles = async () => {
     setLoading(true)
     try {
-      const res = await axios.get('http://localhost:8000/articles')
+      const res = await axios.get('https://pulseai-backend-3.onrender.com/articles')
       // Add sort key and sort by published date (newest first)
       const sortedArticles = (res.data.articles || [])
         .map(addSortKey)
@@ -129,7 +129,7 @@ function Notifications() {
         [notificationType]: notificationType === 'email' ? email : whatsapp
       }
 
-      const response = await axios.post(`http://localhost:8000${endpoint}`, payload)
+      const response = await axios.post(`https://pulseai-backend-3.onrender.com${endpoint}`, payload)
       
       setMessage(`Successfully sent ${articlesToSend.length} articles via ${notificationType}!`)
       setMessageType('success')

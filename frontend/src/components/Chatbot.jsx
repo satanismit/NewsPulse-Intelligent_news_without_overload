@@ -91,7 +91,7 @@ function Chatbot() {
     setError(null)
 
     try {
-      const response = await axios.post('http://localhost:8000/chat', {
+      const response = await axios.post('https://pulseai-backend-3.onrender.com/chat', {
         query: inputMessage
       })
 
